@@ -19,12 +19,14 @@ type SettingsProps = {
 }
 
 const Feature = ({ settings }: SettingsProps) => {
+  //function to generate unique numbers
   const generateRandom = () => {
     return Math.floor((1 + Math.random()) * 0x10000)
       .toString(16)
       .substring(1)
   }
 
+  //add unique ids to all entries in the object
   const newVal = settings.map((val) => {
     if (Object.keys(val.children).length > 0) {
       for (const childVal in val.children) {
@@ -33,7 +35,7 @@ const Feature = ({ settings }: SettingsProps) => {
       }
     }
     const id = generateRandom()
-    return { ...val, id: id }
+    return { ...val, id }
   })
 
   const [values, setValues] = useState(newVal)
