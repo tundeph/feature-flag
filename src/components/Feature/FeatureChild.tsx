@@ -17,7 +17,6 @@ export const FeatureChild = ({
   feature,
   status,
   maxQuantity,
-  id,
   handleStatus,
   handleFrequency,
 }: FeatureProps) => {
@@ -35,7 +34,7 @@ export const FeatureChild = ({
         <span>
           {maxQuantity && (
             <select
-              onChange={(event) => handleFrequency(event, id)}
+              onChange={(event) => handleFrequency(event, feature)}
               disabled={!status}
               value={!status ? 1 : undefined}
             >
@@ -49,7 +48,7 @@ export const FeatureChild = ({
               type="checkbox"
               onChange={handleStatus}
               checked={status}
-              value={id}
+              value={feature}
             />
             <span className="slider round"></span>
           </label>
