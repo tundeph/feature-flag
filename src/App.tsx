@@ -1,4 +1,4 @@
-import Settings from "./pages/Settings"
+import Settings from "./pages/Settings/Settings"
 import "./App.scss"
 
 function App() {
