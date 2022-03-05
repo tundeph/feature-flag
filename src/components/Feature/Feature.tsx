@@ -9,85 +9,69 @@ import { FeatureType } from "./Feature.types"
 //styles
 import "./Feature.scss"
 
-type SettingsProps = {
+interface SettingsProps {
   defaultValue: FeatureType[]
   getValue: Dispatch<SetStateAction<FeatureType[]>>
 }
 
+interface makeChangeProps {
+  (
+    array: any[],
+    feature: string,
+    property: string,
+    value: number | string | boolean
+  ): FeatureType[]
+}
+
+interface handleStatusProps {
+  (event: React.ChangeEvent<HTMLInputElement>, feature: string): any
+}
+
+interface handleFrequencyProps {
+  (event: React.ChangeEvent<HTMLSelectElement>, feature: string): any
+}
+
 const Feature = ({ defaultValue, getValue }: SettingsProps) => {
-  const handleParentStatus = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>, feature: string) => {
-      const isChecked = event.target.checked
-      if (defaultValue.length > 0) {
-        const val = defaultValue.map((value) => {
-          if (value.feature === feature) {
-            value.status = isChecked
-            if (!isChecked && value.children) {
-              value.children.map((childValue) => {
-                childValue.status = false
-                childValue.quantity = 0
-                return childValue
-              })
-              value.quantity = 0
-            }
+  //helper function to change prop values
+  const makeChange: makeChangeProps = (array, feature, property, value) => {
+    const ret = array.map((childValue) => {
+      if (childValue.children) {
+        makeChange(childValue.children, feature, property, value)
+      }
+
+      if (childValue.feature === feature) {
+        childValue[property] = value
+
+        if (property === "status" && !value) {
+          childValue.quantity = 0
+          if (childValue.children) {
+            childValue.children.map(
+              (child: { status: boolean; quantity: number }) => {
+                child.status = false
+                child.quantity = 0
+                return child
+              }
+            )
           }
-          return value
-        })
-        getValue(val)
-      }
-    },
-    [defaultValue, getValue]
-  )
-
-  const handleChildrenStatus = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>, feature: string) => {
-      const isChecked = event.target.checked
-      const val = defaultValue.map((value) => {
-        if (value.children) {
-          value.children.map((childValue) => {
-            if (childValue.feature === feature) {
-              childValue.status = isChecked
-            }
-            return childValue
-          })
         }
-        return value
-      })
-      getValue(val)
-    },
-    [defaultValue, getValue]
-  )
-
-  const handleParentFrequency = (
-    event: React.ChangeEvent<HTMLSelectElement>,
-    feature: string
-  ) => {
-    const val = defaultValue.map((value) => {
-      if (value.feature === feature) {
-        value.quantity = Number(event.target.value)
       }
-      return value
+      return childValue
     })
-    getValue(val)
+
+    return ret
   }
 
-  const handleChildrenFrequency = (
-    event: React.ChangeEvent<HTMLSelectElement>,
-    feature: string
-  ) => {
-    const freq = Number(event.target.value)
-    const value = defaultValue.map((v) => {
-      if (v.children) {
-        v.children.map((childValue) => {
-          if (childValue.feature === feature) {
-            childValue.quantity = freq
-          }
-          return childValue
-        })
-      }
-      return v
-    })
-    getValue(value)
+  const handleStatus: handleStatusProps = (event, feature) => {
+    const isChecked = event.target.checked
+    if (defaultValue.length > 0) {
+      const val = makeChange(defaultValue, feature, "status", isChecked)
+      getValue(val)
+    }
+  }
+  const handleFrequency: handleFrequencyProps = (event, feature) => {
+    const newVal = Number(event.target.value)
+    const val = makeChange(defaultValue, feature, "quantity", newVal)
+    getValue(val)
   }
 
   return (
@@ -104,10 +88,8 @@ const Feature = ({ defaultValue, getValue }: SettingsProps) => {
                     feature={setting.feature}
                     status={setting.status}
                     maxQuantity={setting.maxQuantity}
-                    handleStatus={(e) => handleParentStatus(e, setting.feature)}
-                    handleFrequency={(e) =>
-                      handleParentFrequency(e, setting.feature)
-                    }
+                    handleStatus={(e) => handleStatus(e, setting.feature)}
+                    handleFrequency={(e) => handleFrequency(e, setting.feature)}
                   />
                   {setting.children && (
                     <div className="top-arrow">
@@ -127,11 +109,9 @@ const Feature = ({ defaultValue, getValue }: SettingsProps) => {
                         feature={child.feature}
                         status={child.status}
                         maxQuantity={child.maxQuantity}
-                        handleStatus={(e) =>
-                          handleChildrenStatus(e, child.feature)
-                        }
+                        handleStatus={(e) => handleStatus(e, child.feature)}
                         handleFrequency={(e) =>
-                          handleChildrenFrequency(e, child.feature)
+                          handleFrequency(e, child.feature)
                         }
                       />
                     </div>
